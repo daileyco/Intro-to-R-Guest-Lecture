@@ -5,7 +5,11 @@
     "cursorPosition": "17,11",
     "scrollLine": "1",
     "rmdVisualMode": "true",
+<<<<<<< Updated upstream
     "rmdVisualModeLocation": "89:0",
+=======
+    "rmdVisualModeLocation": "566:0",
+>>>>>>> Stashed changes
     "rmdVisualWrapConfigured": "true",
     "docOutlineVisible": "1"
 }

@@ -19,5 +19,5 @@ I made these edits online (or a collaborator pushed them).
 
 Yadda yadda yadda
 
-
+This is another change locally. Change change. 
 I am typing. 
