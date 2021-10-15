@@ -2,18 +2,10 @@
     "tempName": "Untitled1",
     "source_window_id": "",
     "Source": "Source",
-    "cursorPosition": "17,11",
-    "scrollLine": "1",
-    "rmdVisualMode": "true",
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    "rmdVisualModeLocation": "89:0",
-=======
-    "rmdVisualModeLocation": "566:0",
->>>>>>> Stashed changes
-=======
-    "rmdVisualModeLocation": "566:0",
->>>>>>> Stashed changes
+    "cursorPosition": "16,215",
+    "scrollLine": "0",
+    "rmdVisualMode": "false",
+    "rmdVisualModeLocation": "595:0",
     "rmdVisualWrapConfigured": "true",
     "docOutlineVisible": "1"
 }
