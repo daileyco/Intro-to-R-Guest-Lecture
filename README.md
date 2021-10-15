@@ -19,5 +19,9 @@ I made these edits online (or a collaborator pushed them).
 
 Yadda yadda yadda
 
+<<<<<<< Updated upstream
 This is another change locally. Change change. 
 I am typing. 
+=======
+This is another change locally. Change change. 
+>>>>>>> Stashed changes
