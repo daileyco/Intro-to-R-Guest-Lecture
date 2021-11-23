@@ -1,0 +1,178 @@
+---
+title: "COVID-19 in Athens, GA, USA 2020-2021"
+author: 
+  - Cody Dailey [^epibios]
+link-citations: yes
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output: 
+  bookdown::word_document2:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+[^epibios]:Department of Epidemiology and Biostatistics, University of Georgia, Athens, GA, USA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, fig.width = 6, fig.height = 6*9/16, out.width = "100%", out.height = "90%", fig.topcaption = TRUE)
+```
+
+
+```{r, echo=F, results='hide', message=F, warning=F, error=F}
+my.packages <- c("dplyr", "readr", "readxl", "magrittr", "knitr", "openxlsx", "flextable", "tidyr")
+
+sapply(my.packages, library, character.only=T)
+rm(my.packages)
+```
+
+
+```{r, echo=F, message=F, warning=F, error=F}
+covid <- read_csv("./Data/ga_covid_data/epicurve_symptom_date.csv") %>% 
+            filter(county=="Clarke") %>% 
+            select(symptom.date=`symptom date`, 
+                   cases, moving_avg_cases)
+
+covid.report <- read_csv("./Data/ga_covid_data/epicurve_rpt_date.csv") %>% 
+            filter(county=="Clarke") %>% 
+            select(report_date, 
+                   cases, 
+                   moving_avg_cases)
+
+covid.testing <- read_csv("./Data/ga_covid_data/pcr_positives_col.csv") %>% 
+            filter(county=="Clarke") %>% 
+            select(collection_date = collection_dt, 
+                   pcr_tests = `ALL PCR tests performed`, 
+                   pcr_pos = `All PCR positive tests`)
+
+
+
+covid <- full_join(
+            covid%>%
+              select(cases.symptom.onset=cases, date=symptom.date), 
+            covid.report%>%
+              select(cases.reported=cases, date=report_date), 
+            by = "date"
+            ) %>% 
+         full_join(
+           covid.testing%>%
+             rename(date=collection_date), 
+           by="date"
+           ) %>%
+         select(date, cases.symptom.onset, cases.reported, pcr_tests, pcr_pos)
+
+rm(covid.report, covid.testing)
+```
+
+# COVID-19 Epidemic Curve in Athens
+
+Figure \@ref(fig:epi-curve) shows the epidemic curve for Athens-Clarke County with cases by dates of report and symptom onset, and PCR positive tests by date of specimen collection. These data are complete from `r format(min(covid$date), "%d %B %Y")` to `r format(max(covid$date), "%d %B %Y")` and have records for cases totaling `r sum(covid$cases.reported)`, `r sum(covid$cases.symptom.onset)`, and `r sum(covid$pcr_pos)`, respectively for cases by report date, symptom onset date, and date of specimen collection.    
+    
+The difference in the curves is slight, but left shifts are notable. That is, the curve for cases by report date lags behind the curve for PCR positive cases by date of specimen collection which, in turn, lags behind the curve for cases by symptom onset date. 
+
+
+```{r epi-curve, echo = F, message=F, warning=F, error=F, fig.height=6*9/16*2, fig.cap = "Epidemic Curve of COVID-19 in Athens-Clarke County, GA, USA"}
+
+date.labels <- seq(min(covid$date), max(covid$date), by="months")
+
+at.points <- seq(0.5, nrow(covid)-0.5, by=1)[which(covid$date%in%date.labels)]
+
+
+my.days <- c("2020-08-14", "2020-12-05") %>% as.Date(format = "%Y-%m-%d")
+
+
+at.points2 <- seq(0.5, nrow(covid)-0.5, by=1)[which(covid$date%in%c(my.days[1], my.days[2]))]
+
+
+
+
+# png(filename = "./Output/epi-curves.png", width = 16, height = 9, units = "in", res = 300, pointsize = 16)
+par(mar=c(2.1,3.6,2.1,1.1), mfrow = c(3,1))
+
+
+
+
+
+
+barplot(cases.symptom.onset~date, data=covid, las=2, xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', width = 1, space = 0, xaxs = 'i', yaxs = 'i', axes=F, col = viridis::viridis(100, alpha = 1)[1], border = viridis::viridis(100, alpha = 1)[1], ylim = c(0, 300))
+axis(1, at=at.points, tick=T, labels = paste(format(date.labels, "%b %y"),' '), xpd = TRUE, cex.axis=0.7, line = 0, padj = -2, tck = -0.02)
+axis(2, labels = F, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(xlab = "Date of Symptom Onset", line = 1)
+# axis(3, at = at.points2, labels = format(c(min(wbe$sample_date), max(wbe$sample_date)), "%d %b %y"), tick = T, line = 0, tck = 0.02, cex.axis = 0.7, hadj = 1)
+# axis(3, at = mean(at.points2), labels = "Study Period", line = 0, padj = -0.25, tck = -0.04)
+text(par('usr')[1]-par('plt')[1]*diff(par('usr')[1:2])/diff(par('plt')[1:2]), 
+     par('usr')[4]+(1-par('plt')[4])*diff(par('usr')[3:4])/diff(par('plt')[3:4]), 
+     labels = "A", adj = c(0,1), xpd = T, cex = 1, font = 2)
+axis(2, labels = T, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(ylab = "Cases", line = 2)
+
+abline(v = at.points, lty = 3, col = "grey60", xpd = T)
+# legend("topleft", fill = c("gainsboro", viridis::viridis(100, alpha = 0.75)[55]), legend = c("Reported", "Symptom Onset"))
+
+axis(3, at = at.points2, labels = format(my.days, "%d %b %y"), tick = T, line = 0, tck = 0.02, cex.axis = 0.7)
+axis(3, at = mean(at.points2), labels = "Study Period", line = 0, padj = -0.25, tck = -0.04)
+
+
+
+legend("topleft", fill = c(viridis::viridis(100, alpha = 1)[1], viridis::viridis(100, alpha = 1)[50], viridis::viridis(100, alpha = 1)[100]), border = c(viridis::viridis(100, alpha = 1)[1], viridis::viridis(100, alpha = 1)[50], viridis::viridis(100, alpha = 1)[100]), legend = c("Symptom Onset", "Specimen Collection", "Reported"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+barplot(pcr_pos~date, data=covid, las=2, xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', width = 1, space = 0, xaxs = 'i', yaxs = 'i', axes=F, col = viridis::viridis(100, alpha = 1)[50], border = viridis::viridis(100, alpha = 1)[50], ylim = c(0, 300))
+axis(1, at=at.points, tick=T, labels = paste(format(date.labels, "%b %y"),' '), xpd = TRUE, cex.axis=0.7, line = 0, padj = -2, tck = -0.02)
+axis(2, labels = F, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(xlab = "Date of Specimen Collection", line = 1)
+# axis(3, at = at.points2, labels = format(c(min(wbe$sample_date), max(wbe$sample_date)), "%d %b %y"), tick = T, line = 0, tck = 0.02, cex.axis = 0.7, hadj = 1)
+# axis(3, at = mean(at.points2), labels = "Study Period", line = 0, padj = -0.25, tck = -0.04)
+text(par('usr')[1]-par('plt')[1]*diff(par('usr')[1:2])/diff(par('plt')[1:2]), 
+     par('usr')[4]+(1-par('plt')[4])*diff(par('usr')[3:4])/diff(par('plt')[3:4]), 
+     labels = "B", adj = c(0,1), xpd = T, cex = 1, font = 2)
+axis(2, labels = T, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(ylab = "Cases", line = 2)
+
+abline(v = at.points, lty = 3, col = "grey60", xpd = T)
+# legend("topleft", fill = c("gainsboro", viridis::viridis(100, alpha = 0.75)[55]), legend = c("Reported", "Symptom Onset"))
+
+
+
+
+
+
+
+# par(mar = c(2.1, 1.1, 1.1, 1.1))
+barplot(cases.reported~date, data=covid, las=2, xlab = '', ylab = '', xaxt = 'n', yaxt = 'n', width = 1, space = 0, xaxs = 'i', yaxs = 'i', axes=F, col = viridis::viridis(100, alpha = 1)[100], border = viridis::viridis(100, alpha = 1)[100], ylim = c(0, 300))
+axis(1, at=at.points, tick=T, labels = paste(format(date.labels, "%b %y"),' '), xpd = TRUE, cex.axis=0.7, line = 0, padj = -2, tck = -0.02)
+axis(2, labels = F, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(xlab = "Date of Report", line = 1)
+
+
+axis(2, labels = T, tick = T, cex=0.7, cex.axis = 0.7, las = 1)
+title(ylab = "Cases", line = 2)
+
+abline(v = at.points, lty = 3, col = "grey60", xpd = T)
+
+
+
+
+text(par('usr')[1]-par('plt')[1]*diff(par('usr')[1:2])/diff(par('plt')[1:2]), 
+     par('usr')[4]+(1-par('plt')[4])*diff(par('usr')[3:4])/diff(par('plt')[3:4]), 
+     labels = "C", adj = c(0,1), xpd = T, cex = 1, font = 2)
+
+
+
+
+
+# dev.off()
+```
+
